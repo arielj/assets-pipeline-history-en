@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+
+    <title>Rails assets through time - Ombutalk</title>
+
+    <meta
+      name="description"
+      content="OmbuTalk about Assets management in Rails over time"
+    />
+    <meta name="author" content="Ariel Juodziukynas" />
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" href="./reset.css" />
+    <link rel="stylesheet" href="./reveal.css" />
+    <link rel="stylesheet" href="./theme/black.css" id="theme" />
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link
+      rel="stylesheet"
+      href="plugin/highlight/monokai.css"
+      id="highlight-theme"
+    />
+
+    <style>
+      body {
+        background: black;
+      }
+      body:after {
+        content: "";
+        position: fixed;
+        bottom: 1rem;
+        left: 1rem;
+        z-index: 1000;
+        background-image: url("./ombulabs-white.png");
+        width: 150px;
+        height: 29px;
+      }
+      body.clear-background:after {
+        background-image: url("./ombulabs.png");
+      }
+
+      #first h1 {
+        text-transform: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding-right: 1em;
+      }
+      #first h1 img {
+        height: 1em;
+      }
+
+      section li {
+        font-size: 30px;
+      }
+
+      .graph {
+        display: grid;
+        width: 100%;
+        --rows: 6;
+        grid-template-columns: [rails30] 1fr [rails31] 1fr [rails32] 1fr [rails40] 1fr [rails41] 1fr [rails42] 1fr [rails50] 1fr [rails51] 1fr [rails52] 1fr [rails60] 1fr [rails61] 1fr [rails70] 1fr [rails71] 1fr [rails80] 1fr;
+        grid-template-rows: 3rem repeat(var(--rows), 2.5rem);
+        row-gap: 1rem;
+        --green: #01d241;
+        --orange: #fdca31;
+        position: relative;
+        margin-bottom: 2rem;
+        background: white;
+        padding: 1rem;
+      }
+
+      .graph span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+        color: black;
+        position: relative;
+        z-index: 1;
+      }
+
+      .graph .header {
+        border-bottom: 3px solid var(--green);
+        position: relative;
+        color: red;
+        font-size: 2rem;
+      }
+
+      .graph .header:not(:first-child):after {
+        display: block;
+        content: "";
+        width: 0px;
+        height: calc(3rem + 2.5rem * var(--rows) + 1rem * var(--rows));
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        border-right: 2px dashed var(--green);
+      }
+
+      .supported {
+        background: var(--orange);
+      }
+      .default {
+        background: var(--green);
+      }
+      .supported,
+      .default {
+        border-radius: 15px;
+        box-shadow: 2px 3px 5px -3px rgba(0, 0, 0, 0.75);
+        -webkit-box-shadow: 2px 3px 5px -3px rgba(0, 0, 0, 0.75);
+        -moz-box-shadow: 2px 3px 5px -3px rgba(0, 0, 0, 0.75);
+      }
+
+      .static {
+        grid-row: 2;
+      }
+      .sprockets {
+        grid-row: 3;
+      }
+      .webpacker {
+        grid-row: 4;
+      }
+      .shakapacker {
+        grid-row: 5;
+      }
+      .importmaps,
+      .cssbundling {
+        grid-row: 6;
+      }
+      .jsbundling,
+      .propshaft {
+        grid-row: 7;
+      }
+
+      .static.label,
+      .static.supported {
+        grid-column: rails30 / -1;
+      }
+      .static.default {
+        grid-column: rails30 / rails31;
+      }
+
+      .sprockets.label,
+      .sprockets.supported {
+        grid-column: rails31 / -1;
+      }
+      .sprockets.default {
+        grid-column: rails31 / rails60;
+      }
+
+      .webpacker.label,
+      .webpacker.supported {
+        grid-column: rails50 / rails71;
+      }
+      .webpacker.default {
+        grid-column: rails60 / rails70;
+      }
+
+      .shakapacker.label,
+      .shakapacker.supported,
+      .importmaps.label,
+      .importmaps.supported,
+      .jsbundling.label,
+      .jsbundling.supported,
+      .cssbundling.label,
+      .cssbundling.supported {
+        grid-column: rails60 / -1;
+      }
+
+      .importmaps.default {
+        grid-column: rails70 / -1;
+      }
+
+      .propshaft.label,
+      .propshaft.supported {
+        grid-column: rails80 / -1;
+      }
+      .propshaft.default {
+        grid-column: rails80 / -1;
+      }
+      .graph.css .sprockets.default {
+        grid-column: rails31 / rails80;
+      }
+
+      .legend {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        border: 1px solid black;
+        background: white;
+        padding: 25px;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        z-index: 2;
+      }
+      .legend span {
+        height: 2.5rem;
+        padding: 0 20px;
+      }
+    </style>
+  </head>
+
+  <body class="clear-background">
+    <div class="reveal">
+      <!-- Any section element inside of this container is displayed as a slide -->
+      <div class="slides">
+        <section data-background-color="gray" id="first">
+          <h1>The evolution of Rails Assets through time</h1>
+        </section>
+
+        <section>
+          <h2>What are assets?</h2>
+
+          <ul>
+            <li class="fragment">
+              Static images, css, js, fonts, videos, text files, binaries, etc
+            </li>
+            <li class="fragment">CSS and JS files change often</li>
+            <li class="fragment">Images change less often</li>
+            <li class="fragment">Videos and fonts don't change much</li>
+          </ul>
+        </section>
+
+        <section>
+          <section>
+            <h2>Before Rails 3.1</h2>
+            <p>Before 2011</p>
+            <p>All assets in public folder or through CDNs</p>
+            <iframe
+              src="https://giphy.com/embed/dRXSJTNTfr9AI"
+              width="480"
+              height="266"
+              style=""
+              frameborder="0"
+              class="giphy-embed"
+              allowfullscreen
+            ></iframe>
+          </section>
+
+          <section>
+            <h3>Issues with this approach:</h3>
+
+            <ul>
+              <li class="fragment">
+                Caching and cache invalidation (passing a "?timestamp" query
+                string in the url)
+              </li>
+              <li class="fragment">
+                Single large file vs multiple small files
+              </li>
+              <li class="fragment">
+                No support for languages like CoffeeScript -2009- or SASS
+                (TypeScript didn't exist yet)
+              </li>
+              <li class="fragment">Unoptimized file size</li>
+              <li class="fragment">Hard to use existing libraries</li>
+            </ul>
+            <iframe
+              src="https://giphy.com/embed/4cuyucPeVWbNS"
+              height="200"
+              style=""
+              frameborder="0"
+              class="fragment giphy-embed"
+              allowfullscreen
+            ></iframe>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h2>The Assets Pipeline</h2>
+            <p>With Sprockets - Since 2011</p>
+
+            <ul>
+              <li class="fragment">
+                Introduced in Rails 3.1 with the `sprockets` gem as a dependency
+                of Rails
+              </li>
+              <li class="fragment">
+                For Rails 4.0, the integration between Sprockets and Rails was
+                extracted as a new Rails dependency called `sprockets-rails`
+              </li>
+              <li class="fragment">Assets in /public were still valid</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Solving problems:</h3>
+            <ul>
+              <li class="fragment">
+                Cache invalidation: a digest/fingerprint of the file content is
+                appended to the file name
+              </li>
+              <li class="fragment">
+                Bundling: replaces "require" directives with the actual code (a
+                big long single file with all the code)
+              </li>
+              <li class="fragment">
+                Transpilation: supports CoffeeScript and SASS/SCSS by default
+              </li>
+              <li class="fragment">
+                Clean up files: uses compressors and uglifiers/minifiers to
+                remove what a browser does not need and compress the file
+              </li>
+              <li class="fragment">
+                Easy to incorporate assets from gems instead of copying them
+                into the project
+              </li>
+              <li class="fragment">
+                The `jquery-rails` gem is included as a default
+              </li>
+            </ul>
+          </section>
+        </section>
+
+        <section>
+          <h2>Turbolinks (2013)</h2>
+
+          <ul>
+            <li class="fragment">
+              Included by default in new apps starting with Rails 4.0
+            </li>
+            <li class="fragment">
+              Aims to provide a "single-page-app-like" feeling for multiple page
+              applications
+            </li>
+            <li class="fragment">
+              Basic functionality works fine, but many JavaScript packages where
+              not fully compatible out of the box
+            </li>
+            <img
+              class="fragment"
+              src="./images/hide.jpg"
+              style="width: 300px"
+            />
+          </ul>
+        </section>
+
+        <section>
+          <section>
+            <h2>Before Rails 5.1</h2>
+            <p>Before 2016</p>
+
+            <ul>
+              <li class="fragment">
+                The JS world was changing, but Sprockets kept adding features to
+                be compatible with it
+              </li>
+              <li class="fragment">
+                Support of importing assets from a node_modules folder (using
+                Yarn)
+              </li>
+              <li class="fragment">
+                Support for many of the new ECMAScript features (thought through
+                some experimental flags)
+              </li>
+              <li class="fragment">
+                Other solutions for the same problem appeared for other
+                ecosystems, and the JS world changed more and more
+              </li>
+              <li class="fragment">
+                Eventually, Webpack (2012) was the winner
+              </li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Webpacker</h3>
+            <ul>
+              <li class="fragment">
+                Webpack was introduced as an option through the `webpacker` gem
+                for new apps with the `--webpacker` flag in Rails 5.1
+              </li>
+              <li class="fragment">
+                The `jquery-rails` dependency was removed in favor if the
+                `rails-ujs` package that was part of Rails
+              </li>
+              <li class="fragment">
+                `rails-ujs` was written in CoffeeScript, so `coffee-rails` was
+                now a requirement to use that feature of Rails
+              </li>
+            </ul>
+            <iframe
+              src="https://giphy.com/embed/9oF7EAvaFUOEU"
+              width="380"
+              style=""
+              frameborder="0"
+              class="fragment giphy-embed"
+              allowfullscreen
+            ></iframe>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h2>The Dark Ages</h2>
+            <p>2019 - 2021</p>
+            <ul>
+              <li class="fragment">
+                The JS ecosystem was changing faster than what Sprockets could
+                handle (new standards, new patterns, new languages, etc)
+              </li>
+              <li class="fragment">
+                Webpack was capable of doing everything that was needed to
+                support that, so it was made the default for JavaScript assets
+                in Rails 6.0
+              </li>
+              <li class="fragment">
+                The rest of the assets were still handled by Sprockets-rails by
+                default
+              </li>
+              <li class="fragment">
+                It was possible to configure Rails to handle all the assets
+                using Webpacker too
+              </li>
+            </ul>
+          </section>
+
+          <section>
+            <ul>
+              <li class="fragment">Webpack cannot read assets from gems</li>
+              <li class="fragment">
+                Now gems that wanted to include assets had to also provide an
+                NPM package (the gem for the Rails code and the NPM package for
+                Webpack)
+              </li>
+              <li class="fragment">
+                You could have both assets from Sprockets and Webpack for any of
+                the asset types
+              </li>
+              <li class="fragment">
+                Multiple ways of using a feature was confusing (for example,
+                rails-ujs is included in Rails so it works OOTB if handling JS
+                assets with Sprockets, but the `@rails/ujs` package is needed in
+                the package.json file if using Webpack)
+              </li>
+            </ul>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h2>Where are we now?</h2>
+            <p>Since 2021 (Rails 7.0)</p>
+
+            <ul>
+              <li class="fragment">
+                Webpacker was retired and not a default anymore
+              </li>
+              <li class="fragment">
+                importmap-rails, the default since Rails 7.0 (with support for
+                Rails 6)
+              </li>
+              <li class="fragment">
+                jsbundling-rails, allows using other popular bundlers and not
+                just Webpack: esbuild, rollup, and bun
+              </li>
+              <li class="fragment">
+                cssbundling-rails, allows using other popular CSS bundlers
+                (tailwind, bulma, dart-sass, etc)
+              </li>
+            </ul>
+          </section>
+          <section>
+            <ul>
+              <li class="fragment">
+                vite_rails, allows using Vite to handle assets (non-official)
+              </li>
+              <li class="fragment">
+                Shakapacker, continuation of the Webpacker gem (non-official)
+              </li>
+              <li class="fragment">
+                `sprockets-rails` is not a dependency of Rails anymore
+              </li>
+              <li class="fragment">
+                `turbolinks` and `rails-ujs` are replaced for new apps in favor
+                of `turbo-rails`
+              </li>
+              <li class="fragment">
+                With the new defaults, new Rails 7.0 apps don't need Node to
+                manage assets
+              </li>
+            </ul>
+          </section>
+        </section>
+
+        <section>
+          <h2>The future</h2>
+
+          <ul>
+            <li class="fragment">
+              Propshaft to solve assets fingerprinting (default in Rails 8). It
+              does way fewer things than Sprockets
+            </li>
+            <li class="fragment">
+              Sprockets still supported ("for a long time" according to
+              Propshaft's readme)
+            </li>
+            <li class="fragment">
+              Native browser features
+              <ul>
+                <li>CSS vs SASS</li>
+                <li>JSDoc vs TypeScript</li>
+              </ul>
+            </li>
+            <li class="fragment">React compiler?</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Summary JS</h2>
+          <div class="graph js">
+            <span class="header">3.0</span>
+            <span class="header">3.1</span>
+            <span class="header">3.2</span>
+            <span class="header">4.0</span>
+            <span class="header">4.1</span>
+            <span class="header">4.2</span>
+            <span class="header">5.0</span>
+            <span class="header">5.1</span>
+            <span class="header">5.2</span>
+            <span class="header">6.0</span>
+            <span class="header">6.1</span>
+            <span class="header">7.0</span>
+            <span class="header">7.x</span>
+            <span class="header">8-></span>
+
+            <span class="supported static"></span>
+            <span class="default static"></span>
+            <span class="label static">Static assets (/public)</span>
+            <span class="supported sprockets"></span>
+            <span class="default sprockets"></span>
+            <span class="label sprockets">sprockets-rails</span>
+            <span class="supported webpacker"></span>
+            <span class="default webpacker"></span>
+            <span class="label webpacker">webpacker</span>
+            <span class="supported shakapacker"></span>
+            <span class="label shakapacker">shakapacker</span>
+            <span class="supported importmaps"></span>
+            <span class="default importmaps"></span>
+            <span class="label importmaps">importmap-rails</span>
+            <span class="supported jsbundling"></span>
+            <span class="label jsbundling">jsbundling-rails</span>
+
+            <div class="legend">
+              <span class="supported">Supported option</span>
+              <span class="default">Rails default</span>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2>Summary CSS</h2>
+          <div class="graph css">
+            <span class="header">3.0</span>
+            <span class="header">3.1</span>
+            <span class="header">3.2</span>
+            <span class="header">4.0</span>
+            <span class="header">4.1</span>
+            <span class="header">4.2</span>
+            <span class="header">5.0</span>
+            <span class="header">5.1</span>
+            <span class="header">5.2</span>
+            <span class="header">6.0</span>
+            <span class="header">6.1</span>
+            <span class="header">7.0</span>
+            <span class="header">7.x</span>
+            <span class="header">8-></span>
+
+            <span class="supported static"></span>
+            <span class="default static"></span>
+            <span class="label static">Static assets (/public)</span>
+            <span class="supported sprockets"></span>
+            <span class="default sprockets"></span>
+            <span class="label sprockets">sprockets-rails</span>
+            <span class="supported webpacker"></span>
+            <span class="label webpacker">webpacker</span>
+            <span class="supported shakapacker"></span>
+            <span class="label shakapacker">shakapacker</span>
+            <span class="supported cssbundling"></span>
+            <span class="label cssbundling">cssbundling-rails</span>
+            <span class="supported propshaft"></span>
+            <span class="default propshaft"></span>
+            <span class="label propshaft">propshaft</span>
+
+            <div class="legend">
+              <span class="supported">Supported option</span>
+              <span class="default">Rails default</span>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2>Questions?</h2>
+
+          <iframe
+            src="https://giphy.com/embed/HJB9Nq9RMZgZlLssZF"
+            height="200"
+            style=""
+            frameborder="0"
+            class="giphy-embed"
+            allowfullscreen
+          ></iframe>
+
+          <p>Resources:</p>
+          <ul>
+            <li>
+              <a
+                href="https://www.fastruby.io/blog/the-assets-pipeline-history.html"
+                target="_blank"
+                >www.fastruby.io/blog/the-assets-pipeline-history.html</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://www.fastruby.io/blog/navigating-asset-management-madness.html"
+                target="_blank"
+                >www.fastruby.io/blog/navigating-asset-management-madness.html</a
+              >
+            </li>
+          </ul>
+        </section>
+      </div>
+    </div>
+
+    <script src="./reveal.js"></script>
+    <script src="plugin/zoom/zoom.js"></script>
+    <script src="plugin/notes/notes.js"></script>
+    <script src="plugin/search/search.js"></script>
+    <script src="plugin/markdown/markdown.js"></script>
+    <script src="plugin/highlight/highlight.js"></script>
+    <script>
+      // Also available as an ES module, see:
+      // https://revealjs.com/initialization/
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        center: true,
+        hash: true,
+
+        // Learn about plugins: https://revealjs.com/plugins/
+        plugins: [
+          RevealZoom,
+          RevealNotes,
+          RevealSearch,
+          RevealMarkdown,
+          RevealHighlight,
+        ],
+      });
+
+      Reveal.on("slidechanged", (event) => {
+        if (event.indexh == 0) {
+          document.body.classList.add("clear-background");
+        } else {
+          document.body.classList.remove("clear-background");
+        }
+      });
+    </script>
+  </body>
+</html>
